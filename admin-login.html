@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login | Artisan Coffee House</title>
+<style>
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        font-family: 'Segoe UI', Arial, sans-serif;
+        background: #2b1d16;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .login-box {
+        background: #fff;
+        padding: 40px 36px;
+        border-radius: 12px;
+        width: 100%;
+        max-width: 360px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    .login-box h1 {
+        font-size: 22px;
+        margin: 0 0 4px;
+        color: #2b1d16;
+    }
+    .login-box p.subtitle {
+        margin: 0 0 24px;
+        color: #777;
+        font-size: 14px;
+    }
+    label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #444;
+        margin-bottom: 6px;
+    }
+    input {
+        width: 100%;
+        padding: 11px 12px;
+        margin-bottom: 18px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+    input:focus {
+        outline: none;
+        border-color: #a97155;
+    }
+    button {
+        width: 100%;
+        padding: 12px;
+        background: #a97155;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    button:hover { background: #8f5c42; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .error-msg {
+        background: #fdecea;
+        color: #b3261e;
+        padding: 10px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        margin-bottom: 16px;
+        display: none;
+    }
+    .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+        font-size: 13px;
+        color: #a97155;
+        text-decoration: none;
+    }
+</style>
+</head>
+<body>
+    <div class="login-box">
+        <h1>☕ Admin Login</h1>
+        <p class="subtitle">Artisan Coffee House management panel</p>
+        <div class="error-msg" id="errorMsg"></div>
+        <form id="loginForm">
+            <label for="username">Username</label>
+            <input type="text" id="username" autocomplete="username" required>
+            <label for="password">Password</label>
+            <input type="password" id="password" autocomplete="current-password" required>
+            <button type="submit" id="loginBtn">Log In</button>
+        </form>
+        <a href="index.html" class="back-link">← Back to website</a>
+    </div>
+
+    <script>
+        const form = document.getElementById('loginForm');
+        const errorMsg = document.getElementById('errorMsg');
+        const loginBtn = document.getElementById('loginBtn');
+
+        // If already logged in, skip straight to the dashboard
+        fetch('/api/admin/check')
+            .then(res => res.json())
+            .then(data => {
+                if (data.isAdmin) window.location.href = 'admin-dashboard.html';
+            })
+            .catch(() => {});
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorMsg.style.display = 'none';
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Logging in…';
+
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            try {
+                const res = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    window.location.href = 'admin-dashboard.html';
+                } else {
+                    errorMsg.textContent = data.message || 'Login failed.';
+                    errorMsg.style.display = 'block';
+                }
+            } catch (err) {
+                errorMsg.textContent = 'Could not reach the server. Please try again.';
+                errorMsg.style.display = 'block';
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Log In';
+            }
+        });
+    </script>
+</body>
+</html>

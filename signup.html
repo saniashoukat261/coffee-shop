@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign Up | Artisan Coffee House</title>
+<style>
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        font-family: 'Segoe UI', Arial, sans-serif;
+        background: linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=60') center/cover no-repeat;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    .box {
+        background: #fff;
+        padding: 40px 36px;
+        border-radius: 12px;
+        width: 100%;
+        max-width: 380px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    .box h1 { font-size: 22px; margin: 0 0 4px; color: #2b1d16; }
+    .box p.subtitle { margin: 0 0 24px; color: #777; font-size: 14px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: #444; margin-bottom: 6px; }
+    input {
+        width: 100%; padding: 11px 12px; margin-bottom: 18px;
+        border: 1px solid #ddd; border-radius: 8px; font-size: 14px;
+    }
+    input:focus { outline: none; border-color: #a97155; }
+    button {
+        width: 100%; padding: 12px; background: #a97155; color: #fff;
+        border: none; border-radius: 8px; font-size: 15px; font-weight: 600;
+        cursor: pointer; transition: background 0.2s;
+    }
+    button:hover { background: #8f5c42; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .error-msg { background: #fdecea; color: #b3261e; padding: 10px 12px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; display: none; }
+    .switch-link { display: block; text-align: center; margin-top: 18px; font-size: 13px; color: #444; }
+    .switch-link a { color: #a97155; font-weight: 600; text-decoration: none; }
+    .back-link { display: block; text-align: center; margin-top: 10px; font-size: 13px; color: #a97155; text-decoration: none; }
+</style>
+</head>
+<body>
+    <div class="box">
+        <h1>☕ Create Your Account</h1>
+        <p class="subtitle">Save your address and track your orders</p>
+        <div class="error-msg" id="errorMsg"></div>
+        <form id="signupForm">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" autocomplete="name" required>
+            <label for="email">Email</label>
+            <input type="email" id="email" autocomplete="email" required>
+            <label for="password">Password</label>
+            <input type="password" id="password" autocomplete="new-password" minlength="6" required>
+            <label for="confirmPassword">Confirm Password</label>
+            <input type="password" id="confirmPassword" autocomplete="new-password" minlength="6" required>
+            <button type="submit" id="signupBtn">Create Account</button>
+        </form>
+        <span class="switch-link">Already have an account? <a href="login.html">Log in</a></span>
+        <a href="index.html" class="back-link">← Back to website</a>
+    </div>
+
+    <script>
+        const form = document.getElementById('signupForm');
+        const errorMsg = document.getElementById('errorMsg');
+        const signupBtn = document.getElementById('signupBtn');
+
+        fetch('/api/auth/me').then(r => r.json()).then(data => {
+            if (data.loggedIn) window.location.href = 'account.html';
+        }).catch(() => {});
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorMsg.style.display = 'none';
+
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            if (password !== confirmPassword) {
+                errorMsg.textContent = 'Passwords do not match.';
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            signupBtn.disabled = true;
+            signupBtn.textContent = 'Creating account…';
+
+            try {
+                const res = await fetch('/api/auth/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: document.getElementById('name').value.trim(),
+                        email: document.getElementById('email').value.trim(),
+                        password
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    window.location.href = 'account.html';
+                } else {
+                    errorMsg.textContent = data.message || 'Could not create account.';
+                    errorMsg.style.display = 'block';
+                }
+            } catch (err) {
+                errorMsg.textContent = 'Could not reach the server. Please try again.';
+                errorMsg.style.display = 'block';
+            } finally {
+                signupBtn.disabled = false;
+                signupBtn.textContent = 'Create Account';
+            }
+        });
+    </script>
+</body>
+</html>

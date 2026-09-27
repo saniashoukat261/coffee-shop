@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log In | Artisan Coffee House</title>
+<style>
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        font-family: 'Segoe UI', Arial, sans-serif;
+        background: linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=60') center/cover no-repeat;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .box {
+        background: #fff;
+        padding: 40px 36px;
+        border-radius: 12px;
+        width: 100%;
+        max-width: 380px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    .box h1 { font-size: 22px; margin: 0 0 4px; color: #2b1d16; }
+    .box p.subtitle { margin: 0 0 24px; color: #777; font-size: 14px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: #444; margin-bottom: 6px; }
+    input {
+        width: 100%; padding: 11px 12px; margin-bottom: 18px;
+        border: 1px solid #ddd; border-radius: 8px; font-size: 14px;
+    }
+    input:focus { outline: none; border-color: #a97155; }
+    button {
+        width: 100%; padding: 12px; background: #a97155; color: #fff;
+        border: none; border-radius: 8px; font-size: 15px; font-weight: 600;
+        cursor: pointer; transition: background 0.2s;
+    }
+    button:hover { background: #8f5c42; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .error-msg, .success-msg {
+        padding: 10px 12px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; display: none;
+    }
+    .error-msg { background: #fdecea; color: #b3261e; }
+    .success-msg { background: #e8f8ee; color: #1a7f37; }
+    .switch-link { display: block; text-align: center; margin-top: 18px; font-size: 13px; color: #444; }
+    .switch-link a { color: #a97155; font-weight: 600; text-decoration: none; }
+    .back-link { display: block; text-align: center; margin-top: 10px; font-size: 13px; color: #a97155; text-decoration: none; }
+</style>
+</head>
+<body>
+    <div class="box">
+        <h1>☕ Welcome Back</h1>
+        <p class="subtitle">Log in to your Artisan Coffee House account</p>
+        <div class="error-msg" id="errorMsg"></div>
+        <form id="loginForm">
+            <label for="email">Email</label>
+            <input type="email" id="email" autocomplete="email" required>
+            <label for="password">Password</label>
+            <input type="password" id="password" autocomplete="current-password" required>
+            <button type="submit" id="loginBtn">Log In</button>
+        </form>
+        <span class="switch-link">Don't have an account? <a href="signup.html">Sign up</a></span>
+        <a href="index.html" class="back-link">← Back to website</a>
+    </div>
+
+    <script>
+        const form = document.getElementById('loginForm');
+        const errorMsg = document.getElementById('errorMsg');
+        const loginBtn = document.getElementById('loginBtn');
+
+        fetch('/api/auth/me').then(r => r.json()).then(data => {
+            if (data.loggedIn) window.location.href = 'account.html';
+        }).catch(() => {});
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorMsg.style.display = 'none';
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Logging in…';
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: document.getElementById('email').value.trim(),
+                        password: document.getElementById('password').value
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    window.location.href = 'account.html';
+                } else {
+                    errorMsg.textContent = data.message || 'Login failed.';
+                    errorMsg.style.display = 'block';
+                }
+            } catch (err) {
+                errorMsg.textContent = 'Could not reach the server. Please try again.';
+                errorMsg.style.display = 'block';
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Log In';
+            }
+        });
+    </script>
+</body>
+</html>
